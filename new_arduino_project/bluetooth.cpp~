@@ -1,0 +1,35 @@
+void read_bluetooth()
+{
+	char val;
+	if(BT.available()){
+		val = BT.read();
+	}
+	if(val == UP){
+		speed = 2;
+		dir = 1;
+	}
+	if(val == DOWN){
+		speed = 0;
+		dir = 1;
+	}
+	if(val == UPLEFT){
+		speed = 2;
+		dir = 0;
+	}
+	if(val == UPRIGHT){
+		speed = 2;
+		dir = 2;
+	}
+	if(val == DOWNLEFT){
+		speed = 0;
+		dir = 0;
+	}
+	if(val == DOWNRIGHT){
+		speed = 0;
+		dir = 2;
+	}
+	else{
+		speed = 1;
+		dir = 1;	
+	}	
+}

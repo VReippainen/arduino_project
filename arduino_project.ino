@@ -11,15 +11,15 @@
 
 /*
 This Arduino code will take inputs from a digital MPU6050 IMU and a few switches.  
-The resulting serial output is used to control a Saber motor controller by Dimension Engineering.
-This code has been written with knowledge and education gained from the following people:
-Jeff Rowberg: https://github.com/jrowberg/i2cdevlib
-XenonJohn: http://www.instructables.com/id/Self-balancing-skateboardsegwy-project-Arduino-S/
-ScitechWA: http://www.instructables.com/id/Self-Balancing-Scooter-Ver-20/
-Geekmom: http://www.geekmomprojects.com/mpu-6050-dmp-data-from-i2cdevlib/
-Julian Arnott
-Eric Wang
-*/
+ The resulting serial output is used to control a Saber motor controller by Dimension Engineering.
+ This code has been written with knowledge and education gained from the following people:
+ Jeff Rowberg: https://github.com/jrowberg/i2cdevlib
+ XenonJohn: http://www.instructables.com/id/Self-balancing-skateboardsegwy-project-Arduino-S/
+ ScitechWA: http://www.instructables.com/id/Self-Balancing-Scooter-Ver-20/
+ Geekmom: http://www.geekmomprojects.com/mpu-6050-dmp-data-from-i2cdevlib/
+ Julian Arnott
+ Eric Wang
+ */
 
 #include <Wire.h>
 #include "I2Cdev.h"
@@ -67,7 +67,7 @@ float aa_constant = 0.005; //this means 0.5% of the accelerometer reading is fed
 #define SABER_ALL_STOP  0 //motor command to send when issuing full stop command
 
 SoftwareSerial SaberSerial = SoftwareSerial (SABER_RX_PIN, SABER_TX_PIN );
-                                             
+
 void initSabertooth (void)  { //initialize software to communicate with sabertooth 
   pinMode ( SABER_TX_PIN, OUTPUT );
   SaberSerial.begin( SABER_BAUDRATE );
@@ -130,8 +130,8 @@ int oscopePin 			= 3; //spare pin or to oscope to see cycle time for debug
 
 float cur_speed;
 float cycle_time = 0.01; //seconds per cycle - currently 10 milliseconds per loop of the program.  
-                         // Need to know it as gyro measures rate of turning. Needs to know time between each measurement
-                         //so it can then work out angle it has turned through since the last measurement - so it can know angle of tilt from vertical.
+// Need to know it as gyro measures rate of turning. Needs to know time between each measurement
+//so it can then work out angle it has turned through since the last measurement - so it can know angle of tilt from vertical.
 
 int STD_LOOP_TIME = 9; //9= 10mS loop time // code that keeps loop time at 10ms per cycle of main program loop 
 int lastLoopTime = STD_LOOP_TIME;
@@ -197,113 +197,113 @@ int skip = 0;//for debug
 ////////////////////////////////////////////////////////////////////////////////
 void setup() { // run once, when the sketch starts
   ////////////////////////////////////////////////////////////////////////////////
- 
+
   initSabertooth(); //initialze saber motor controller
   SaberSerial.write((byte) 0);   //kill motors when first switched on
 
   Wire.begin();// join I2C bus (I2Cdev library doesn't do this automatically)
   TWBR = 24; // 400kHz I2C clock (200kHz if CPU is 8MHz)
-   
+
   Serial.begin(115200); // initialize I2C and serial monitor to 115,200 baud
-   
+
   Serial.println(F("Initializing I2C devices..."));
   mpu.initialize();
-  
+
   // verify connection
   Serial.println(F("Testing device connections..."));
   Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
   delay(2);
-  
+
   // load and configure the DMP
   Serial.println(F("Initializing DMP..."));
   devStatus = mpu.dmpInitialize();
-  
+
   // supply your own gyro offsets here, scaled for min sensitivity
   mpu.setXGyroOffset(10);
   mpu.setYGyroOffset(7);
   mpu.setZGyroOffset(14);
   mpu.setZAccelOffset(900); // 1688 factory default for  test chip
-  
+
   // make sure it worked (returns 0 if so)
   if (devStatus == 0)
-    {
-      // turn on the DMP, now that it's ready
-      Serial.println(F("Enabling DMP..."));
-      mpu.setDMPEnabled(true);
-    
-      // enable Arduino interrupt detection
-      Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
-      attachInterrupt(MPU_INT, dmpDataReady, RISING);
-      mpuIntStatus = mpu.getIntStatus();
-    
-      // set our DMP Ready flag so the main loop() function knows it's okay to use it
-      Serial.println(F("DMP ready! Waiting for first interrupt..."));
-      dmpReady = true;
-    
-      // get expected DMP packet size for later comparison
-      packetSize = mpu.dmpGetFIFOPacketSize();
-    }
+  {
+    // turn on the DMP, now that it's ready
+    Serial.println(F("Enabling DMP..."));
+    mpu.setDMPEnabled(true);
+
+    // enable Arduino interrupt detection
+    Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+    attachInterrupt(MPU_INT, dmpDataReady, RISING);
+    mpuIntStatus = mpu.getIntStatus();
+
+    // set our DMP Ready flag so the main loop() function knows it's okay to use it
+    Serial.println(F("DMP ready! Waiting for first interrupt..."));
+    dmpReady = true;
+
+    // get expected DMP packet size for later comparison
+    packetSize = mpu.dmpGetFIFOPacketSize();
+  }
   else
-    {
-      // ERROR!
-      // 1 = initial memory load failed
-      // 2 = DMP configuration updates failed
-      // (if it's going to break, usually the code will be 1)
-      Serial.print(F("DMP Initialization failed (code "));
-      Serial.print(devStatus);
-      Serial.println(F(")"));
-    }
+  {
+    // ERROR!
+    // 1 = initial memory load failed
+    // 2 = DMP configuration updates failed
+    // (if it's going to break, usually the code will be 1)
+    Serial.print(F("DMP Initialization failed (code "));
+    Serial.print(devStatus);
+    Serial.println(F(")"));
+  }
 
   //Initialize IO pins
 
   //Init LED
-    pinMode(redLedPin, OUTPUT);      // sets the digital pin as output
-    pinMode(commonHighLedPin, OUTPUT);      // sets the digital pin as output
-    pinMode(greenLedPin, OUTPUT);      // sets the digital pin as output
-    digitalWrite(redLedPin, LOW);   //LED defaults to RED at setup
-    digitalWrite(commonHighLedPin, HIGH);   //LED common is high.
-    digitalWrite(greenLedPin, HIGH);   //LED 
+  pinMode(redLedPin, OUTPUT);      // sets the digital pin as output
+  pinMode(commonHighLedPin, OUTPUT);      // sets the digital pin as output
+  pinMode(greenLedPin, OUTPUT);      // sets the digital pin as output
+  digitalWrite(redLedPin, LOW);   //LED defaults to RED at setup
+  digitalWrite(commonHighLedPin, HIGH);   //LED common is high.
+  digitalWrite(greenLedPin, HIGH);   //LED 
 
   //digital inputs
-    pinMode(deadmanButtonPin, INPUT);
-    digitalWrite(deadmanButtonPin, HIGH);                     // turn on pullup resistors
-    pinMode(balanceForwardPin, INPUT);
-    digitalWrite(balanceForwardPin, HIGH);                  // turn on pullup resistors
-    pinMode(balanceBackwardPin, INPUT);
-    digitalWrite(balanceBackwardPin, HIGH);                 // turn on pullup resistors
-    pinMode(steeringLeftPin, INPUT);
-    digitalWrite(steeringLeftPin, HIGH);              // turn on pullup resistors
-    pinMode(steeringRightPin, INPUT);
-    digitalWrite(steeringRightPin, HIGH);             // turn on pullup resistors
-  
-  //init oscope output
-    pinMode(oscopePin, OUTPUT);      // sets the digital pin as output
-    digitalWrite(oscopePin, LOW);   //
-  
-  
-    //Delay 2 seconds to let MPU6050 self calibrate before reading gyros
-    delay (2000); // 2 seconds
+  pinMode(deadmanButtonPin, INPUT);
+  digitalWrite(deadmanButtonPin, HIGH);                     // turn on pullup resistors
+  pinMode(balanceForwardPin, INPUT);
+  digitalWrite(balanceForwardPin, HIGH);                  // turn on pullup resistors
+  pinMode(balanceBackwardPin, INPUT);
+  digitalWrite(balanceBackwardPin, HIGH);                 // turn on pullup resistors
+  pinMode(steeringLeftPin, INPUT);
+  digitalWrite(steeringLeftPin, HIGH);              // turn on pullup resistors
+  pinMode(steeringRightPin, INPUT);
+  digitalWrite(steeringRightPin, HIGH);             // turn on pullup resistors
 
-    // At start of loop, read the accel/gyro multiple times to get an average baseline value.  
-    // This will be subtracted from the current value in the balance loop.
-    for (j=0; j<7; j++) {
-      read_accel_gyro();
-      initial_angular_rate_Y_sum = (float) initial_angular_rate_Y_sum  + angular_rate_Y; //sum of the 7 readings of front/back tilt gyro
-      initial_angular_rate_X_sum = (float) initial_angular_rate_X_sum  + angular_rate_X; //sum of the 7 readings left/right steer gyro
-      //delay to do accel/gyro reads.
-      delay (10); //10ms
-    }
-    initial_angular_rate_Y = (float) initial_angular_rate_Y_sum/7;  //initial front/back tilt gyro
-    initial_angular_rate_X = (float) initial_angular_rate_X_sum/7;  //initial left/right steer gyro
+  //init oscope output
+  pinMode(oscopePin, OUTPUT);      // sets the digital pin as output
+  digitalWrite(oscopePin, LOW);   //
+
+
+  //Delay 2 seconds to let MPU6050 self calibrate before reading gyros
+  delay (2000); // 2 seconds
+
+  // At start of loop, read the accel/gyro multiple times to get an average baseline value.  
+  // This will be subtracted from the current value in the balance loop.
+  for (j=0; j<7; j++) {
+    read_accel_gyro();
+    initial_angular_rate_Y_sum = (float) initial_angular_rate_Y_sum  + angular_rate_Y; //sum of the 7 readings of front/back tilt gyro
+    initial_angular_rate_X_sum = (float) initial_angular_rate_X_sum  + angular_rate_X; //sum of the 7 readings left/right steer gyro
+    //delay to do accel/gyro reads.
+    delay (10); //10ms
+  }
+  initial_angular_rate_Y = (float) initial_angular_rate_Y_sum/7;  //initial front/back tilt gyro
+  initial_angular_rate_X = (float) initial_angular_rate_X_sum/7;  //initial left/right steer gyro
 
 }//end of setup
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 void loop ()   {
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
 
   tipstart = 0;
   overallgain = 0;
@@ -313,7 +313,7 @@ void loop ()   {
   angle = 0;
   Steering = 512;
   SteerValue = 512;
-    
+
   overallgain = 0.3;  //softstart value. Gain will now rise to final of 0.5 at rate of 0.005 per program loop. 
   //i.e. it will go from 0.3 to 0.5 over the first 4 seconds after tipstart has been activated
 
@@ -322,28 +322,28 @@ void loop ()   {
   //works best if keep legs stiff so you are more rigid like a broom handle is if you are balancing it vertically on end of your finger
   //if you are all wobbly, the board will go crazy trying to correct your own flexibility.
   while (1) {
-     
+
     read_accel_gyro(); // read accel/gyro
-  
-    do_calculations(); //do math
-  
+
+      do_calculations(); //do math
+
     set_motor(); //set motors up
-  
+
     //XXXXXXXXXXXXXXXXXXXXX loop timing control keeps it at 100 cycles per second XXXXXXXXXXXXXXX
     lastLoopUsefulTime = millis() - loopStartTime;
-   
+
     if (lastLoopUsefulTime < STD_LOOP_TIME) {
       delay(STD_LOOP_TIME - lastLoopUsefulTime);
     }
-    
+
     lastLoopTime = millis() - loopStartTime;
     loopStartTime = millis();   
     //XXXXXXXXXXXXXXXXXXXXXX end of loop timing control XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX   
 
     serialOut_timing();//for debug only, displays loop time on screen 
-                       // first digit is time loop takes to run in millisec, 
-                       // second digit is final time for loop including the variable added delay to keep it at 100Hz
-  
+    // first digit is time loop takes to run in millisec, 
+    // second digit is final time for loop including the variable added delay to keep it at 100Hz
+
     //XXXXXXXXXXXXXXXXXXXX softstart function: board a bit squishy when you first bring it to balanced point, then ride becomes firmer over next 4 seconds XXXXXXXXXXXXXXX  
     if (overallgain < 0.5) {
       overallgain = (float)overallgain + 0.005;
@@ -352,7 +352,7 @@ void loop ()   {
       overallgain = 0.5;
     }
     //XXXXXXXXXXXXXXX end of softstart code XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-  
+
     //   //send out oscope debug pulse
     //   digitalWrite(oscopePin, HIGH);   
     //   digitalWrite(oscopePin, HIGH);   
@@ -363,12 +363,12 @@ void loop ()   {
     //   digitalWrite(oscopePin, HIGH);   
     //   digitalWrite(oscopePin, HIGH);   
     //   digitalWrite(oscopePin, LOW);   
-  
+
   }  //end of while(1)       
 } //end of main LOOP
-  
-  
-  
+
+
+
 ////////////////////////////////////////////////////
 // functions start here
 ///////////////////////////////////////////////////
@@ -376,78 +376,78 @@ void loop ()   {
 ////////////////////////////////////////////////////////////////////////////////
 void read_accel_gyro()  {     //digital accel/gyro is read here
   ////////////////////////////////////////////////////////////////////////////////
-  
+
   if (!dmpReady) return; // if programming failed, don't try to do anything
   while (!mpuInterrupt && fifoCount < packetSize) {
   }
-  
+
   // reset interrupt flag and get INT_STATUS byte
   mpuInterrupt = false;
   mpuIntStatus = mpu.getIntStatus();
-  
+
   // get current FIFO count
   fifoCount = mpu.getFIFOCount();
-  
+
   // check for overflow (this should never happen unless our code is too inefficient)
   if ((mpuIntStatus & 0x10) || fifoCount == 1024)
-    {
-      // reset so we can continue cleanly
-      mpu.resetFIFO();
-      Serial.print(" fifoCount: ");
-      Serial.print(fifoCount);
-      Serial.print(" mpuIntStatus: ");
-      Serial.print(mpuIntStatus);
-      Serial.println(F("FIFO overflow!"));
-      // otherwise, check for DMP data ready interrupt (this should happen frequently)
-    }
+  {
+    // reset so we can continue cleanly
+    mpu.resetFIFO();
+    Serial.print(" fifoCount: ");
+    Serial.print(fifoCount);
+    Serial.print(" mpuIntStatus: ");
+    Serial.print(mpuIntStatus);
+    Serial.println(F("FIFO overflow!"));
+    // otherwise, check for DMP data ready interrupt (this should happen frequently)
+  }
   else if (mpuIntStatus & 0x02)
-    {
-      // wait for correct available data length, should be a VERY short wait
-      while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
-      // read a packet from FIFO
-      mpu.getFIFOBytes(fifoBuffer, packetSize);
-      // track FIFO count here in case there is > 1 packet available
-      // (this lets us immediately read more without waiting for an interrupt)
-      fifoCount -= packetSize;
-      //Get sensor data
-      mpu.dmpGetQuaternion(&q, fifoBuffer);
-      mpu.dmpGetGyro(gyro, fifoBuffer);
-      mpu.dmpGetGravity(&gravity, &q);
-      mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-    
-      // angle and angular rate
-      angle_X = ypr[0]* RAD_TO_DEG;             // not used...0 is center of gravity offset
-      angle_Y = ypr[1]* RAD_TO_DEG;             // Accel for Tilt, 0 is center of gravity offset
-      angle_Z = ypr[2]* RAD_TO_DEG;             // not used...0 is center of gravity offset
-      angular_rate_X = ((double)gyro[0]/131.0); // Gyro for steering, in degs/sec.
-      angular_rate_Y = ((double)gyro[1]/131.0); // Gyro for tilt, in degs/sec.
-      angular_rate_Z = ((double)gyro[2]/131.0); // Gyro for X, in degs/sec.
-     
-      angular_rate_X = angular_rate_X * RAD_TO_DEG; // Gyro for steering, in degs/sec.
-      angular_rate_Y = angular_rate_Y * RAD_TO_DEG; // Gyro for tilt, 
-      angular_rate_Z = angular_rate_Z * RAD_TO_DEG; // Gyro for X
-    
-    } //end else if (mpuIntStatus & 0x02)
+  {
+    // wait for correct available data length, should be a VERY short wait
+    while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
+    // read a packet from FIFO
+    mpu.getFIFOBytes(fifoBuffer, packetSize);
+    // track FIFO count here in case there is > 1 packet available
+    // (this lets us immediately read more without waiting for an interrupt)
+    fifoCount -= packetSize;
+    //Get sensor data
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetGyro(gyro, fifoBuffer);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+
+    // angle and angular rate
+    angle_X = ypr[0]* RAD_TO_DEG;             // not used...0 is center of gravity offset
+    angle_Y = ypr[1]* RAD_TO_DEG;             // Accel for Tilt, 0 is center of gravity offset
+    angle_Z = ypr[2]* RAD_TO_DEG;             // not used...0 is center of gravity offset
+    angular_rate_X = ((double)gyro[0]/131.0); // Gyro for steering, in degs/sec.
+    angular_rate_Y = ((double)gyro[1]/131.0); // Gyro for tilt, in degs/sec.
+    angular_rate_Z = ((double)gyro[2]/131.0); // Gyro for X, in degs/sec.
+
+    angular_rate_X = angular_rate_X * RAD_TO_DEG; // Gyro for steering, in degs/sec.
+    angular_rate_Y = angular_rate_Y * RAD_TO_DEG; // Gyro for tilt, 
+    angular_rate_Z = angular_rate_Z * RAD_TO_DEG; // Gyro for X
+
+  } //end else if (mpuIntStatus & 0x02)
 }//end of read_accel_gyro()  
 
 
 ////////////////////////////////////////////////////////////////////////////////
 void do_calculations()  {     //do_calculations here
   ////////////////////////////////////////////////////////////////////////////////
-                     
+
   SteerLeftPin = digitalRead(steeringLeftPin);
   SteerRightPin = digitalRead(steeringRightPin);
-  
+
   //Start Debounce Deadman button
   DeadManPin_temp = digitalRead(deadmanButtonPin);
-  
+
   // If the switch changed, due to noise or pressing:
   if (DeadManPin_temp != DeadManPin_temp_old) {
     // reset the debouncing timer
     lastDebounceTime = millis();
   }
   DeadManPin_temp_old = DeadManPin_temp;
-  
+
   // filter out any deadman switch bounce noise by setting a time buffer
   // dont allow a change from the deadman switch unless 50 mSec has elapsed since the last solid value.
   if ( (millis() - lastDebounceTime) > debounceDelay){
@@ -459,16 +459,16 @@ void do_calculations()  {     //do_calculations here
     }//close if/else
   }//close if(time buffer)
   //End of deadman debounce
-  
+
   balancelForward = digitalRead(balanceForwardPin);
   balancelBackward = digitalRead(balanceBackwardPin);
-    
+
   if (balancelForward == 0) balancetrim = balancetrim - 0.04; //if pressing balance point adjust switch then slowly alter the balancetrim variable by 0.04 per loop of the program 
   //while you are pressing the switch
   if (balancelBackward == 0) balancetrim = balancetrim + 0.04; //same again in other direction
   if (balancetrim < -30) balancetrim = -30; //stops you going too far with this
   if (balancetrim > 30) balancetrim = 30; //stops you going too far the other way
-   
+
   // Savitsky Golay filter for accelerometer readings. It is better than a simple rolling average which is always out of date.
   // SG filter looks at trend of last few readings, projects a curve into the future, then takes mean of whole lot, giving you a more "current" value - Neat!
   // Lots of theory on this on net.
@@ -479,19 +479,19 @@ void do_calculations()  {     //do_calculations here
   gv4 = gv5;
   gv5 = gv6;
   gv6 = (float) angle_Y; //from digital gyro accelerometer  IDH
-  
+
   //SG_filter_result is the accelerometer value from the rolling SG filter on the 0-1023 scale
   SG_filter_result = (float) ((-2*gv0) + (3*gv1) + (6*gv2) + (7*gv3) + (6*gv4) + (3*gv5) + (-2*gv6))/21; 
-  
-   
+
+
 
   //*****START OF STEERING SECTION
-  
+
   //Used to adjust steering from drift
   gangleratedeg2 = angular_rate_X - initial_angular_rate_X;  //IDH subtract curent value from inital value to get delta.
-  
+
   if (SteerLeftPin == 1 && SteerRightPin == 1){ // NO steering wanted. Use second gyro to maintain a (roughly) straight line heading (it will drift a bit).
-                        
+
     SteerCorrect = 0; //blocks the direction stabiliser unless rate of turn exceeds -10 or +10 degrees per sec
     if (gangleratedeg2 > 10 || gangleratedeg2 < -10) {   //resists turning if turn rate exceeds 10deg per sec
       SteerCorrect = (float) 0.4 * gangleratedeg2; //vary the 0.4 according to how much "resistance" to being nudged off course you want.
@@ -506,38 +506,38 @@ void do_calculations()  {     //do_calculations here
     SteerValue = 512;            
   }
   else { //(SteerLeftPin == 0 || SteerRightPin == 0) We DO want to steer                        
-       
+
     //note: SteerValue of 512 is straight ahead
 
     if (SteerLeftPin == 0) {
       SteerValue = 612; //add some some right turn power. Experimentally determined.
     }                                                                
-                        
+
     //steer the other way             
     if (SteerRightPin == 0) {
       SteerValue = 412; //add some some left turn power. Experimentally determined.
     }                                                  
-                 
+
     SteerCorrect = 0;
   }        
   //*****END OF STEERING SECTION
-  
-        
+
+
   //Angle Gain
   SG_filter_result = (float) SG_filter_result * ANGLE_GAIN;
- 
+
   // Balancetrim is front/back balance tip adjustment from switch
   // Sensor tilt number below is Determined experimentally. Bigger is more tilted forward.  It needs to change if you adjust ANGLE_GAIN.
   x_accdeg = (float)((SG_filter_result - (80 + balancetrim)) * (1.0));  
-  
+
   if (x_accdeg < -72) x_accdeg = -72; //put in range.
   if (x_accdeg > 72) x_accdeg = 72;
-  
+
   //For digital gyro here 
   gangleratedeg = (float)(angular_rate_Y - initial_angular_rate_Y); // IDH        
   if (gangleratedeg < -110) gangleratedeg = -110;
   if (gangleratedeg > 110) gangleratedeg = 110;
-   
+
   //Key calculations. Gyro measures rate of tilt gangleratedeg in degrees. We know time since last measurement is cycle_time (10ms) so can work out much we have tipped over since last measurement
   //What is ti variable? Strictly it should be 1. However if you tilt board, then it moves along at an angle, then SLOWLY comes back to level point as it is moving along
   //this suggests the gyro is slightly underestimating the rate of tilt and the accelerometer is correcting it (slowly as it is meant to).
@@ -546,8 +546,8 @@ void do_calculations()  {     //do_calculations here
   //potentiometer is useful for this sort of experiment. You can alter any variable on the fly by temporarily using the potentiometer to adjust it and see what effect it has
 
   gyroangle_dt = (float) ti_constant * cycle_time * gangleratedeg; //e.g  = 3*0.01*gyro_reading
- 
-  gangleraterads = (float) gangleratedeg * 0.017453; //convert to radians - just a scaling issue from history
+
+    gangleraterads = (float) gangleratedeg * 0.017453; //convert to radians - just a scaling issue from history
 
   //Complementary Filter.
   angle = (float) ((1-aa_constant) * (angle + gyroangle_dt)) + (aa_constant * x_accdeg);//aa=(0.005) allows us to feed a bit (0.5%) of the accelerometer data into the angle calculation
@@ -558,11 +558,11 @@ void do_calculations()  {     //do_calculations here
   //Filtered Angle = α × (Gyroscope Angle) + (1 − α) × (Accelerometer Angle)     where
   //α = τ/(τ + Δt)   and   (Gyroscope Angle) = (Last Measured Filtered Angle) + ω×Δt
   //Δt = sampling rate, τ = time constant greater than timescale of typical accelerometer noise
- 
+
   anglerads = (float) angle * 0.017453; //converting to radians again a historic scaling issue from past software
-  
+
   balance_torque = (float) (ACCEL_GAIN * anglerads) +  //from accelerometer
-    (GYRO_GAIN * gangleraterads); //from Gyro 
+  (GYRO_GAIN * gangleraterads); //from Gyro 
 
   //balance torque is motor control variable we would use even if we just ahd one motor. It is what is required to make the thing balance only.
   //the values of 4.5 and 0.5 came from Trevor Blackwell's segway clone experiments and were derived by good old trial and error
@@ -584,7 +584,7 @@ void do_calculations()  {     //do_calculations here
   //is now not only stationary but also level!
 
   level = (float)(balance_torque + cur_speed) * overallgain;  //final overall gain = 0.5
-  
+
 } //end do_calculations
 
 
@@ -593,31 +593,36 @@ void set_motor()   {
   ////////////////////////////////////////////////////////////////////////////////
   unsigned char cSpeedVal_Motor1 = 0;
   unsigned char cSpeedVal_Motor2 = 0;
-  
+
   level = level * 20; //changes it to a scale of about -100 to +100 works ..OK 
-  if (level < -100) {level = -100;}
-  if (level > 100) {level = 100;}
-  
+  if (level < -100) {
+    level = -100;
+  }
+  if (level > 100) {
+    level = 100;
+  }
+
   Steer = (float) SteerValue - SteerCorrect;  //at this point is on the 0-1023 scale 
   //SteerValue is either 512 for dead ahead or bigger/smaller if you are pressing steering switch left or right
   //SteerCorrect is the "adjustment" made by the second gyro that resists sudden turns if one wheel hits a small object for example.
-  
+
   Steer = (Steer - 512) * 0.09;   //gets it down from 0-1023 (with 512 as the middle no-steer point) to -100 to +100 with 0 as the middle no-steer point on scale
-  
+
   //set motors using the simplified serial Sabertooth protocol (same for smaller 2 x 5 Watt Sabertooth by the way)                 
   Motor1percent = (signed char) level + Steer;
   Motor2percent = (signed char) level - Steer;
- 
+
   if (Motor1percent > 100) Motor1percent = 100;
   if (Motor1percent < -100) Motor1percent = -100;
   if (Motor2percent > 100) Motor2percent = 100;
   if (Motor2percent < -100) Motor2percent = -100;
- 
+
   //debug:
   if (DEBUG_FORCE_DEADMAN_SWITCH == 1) {
-    DeadManPin = 0; }
+    DeadManPin = 0; 
+  }
   //debug:
- 
+
   //if not pressing deadman button on hand controller - cut everything
   if (DeadManPin > 0){ 
     level = 0;
@@ -632,7 +637,7 @@ void set_motor()   {
     deadman_occured_flag = 0; 
     digitalWrite(redLedPin, HIGH);   //LED is green when running.
     digitalWrite(greenLedPin, LOW);   //LED is green when running.
-    
+
     loop(); //start loop again to start from the beginning.
   }//End of deadman 
 
@@ -643,33 +648,33 @@ void set_motor()   {
   }
 
   cSpeedVal_Motor1 = map (
-			  Motor1percent,
-			  -100,
-			  100,
-			  SABER_MOTOR1_FULL_REVERSE,
-			  SABER_MOTOR1_FULL_FORWARD);
-                         
+  Motor1percent,
+  -100,
+  100,
+  SABER_MOTOR1_FULL_REVERSE,
+  SABER_MOTOR1_FULL_FORWARD);
+
   cSpeedVal_Motor2 = map (
-			  Motor2percent,
-			  -100,
-			  100,
-			  SABER_MOTOR2_FULL_REVERSE,
-			  SABER_MOTOR2_FULL_FORWARD);
-                         
+  Motor2percent,
+  -100,
+  100,
+  SABER_MOTOR2_FULL_REVERSE,
+  SABER_MOTOR2_FULL_FORWARD);
+
   SaberSerial.write ((byte) cSpeedVal_Motor1);
   SaberSerial.write ((byte) cSpeedVal_Motor2);
 }
 
-  
+
 ////////////////////////////////////////////////////////////////////////////////
 void serialOut_timing(){ //print out to serial port when enabled.
   ////////////////////////////////////////////////////////////////////////////////
-   
+
   if (DEBUG_ENABLE_PRINTING == 1 && 
-      DeadManPin == 0 && //deadman is pushed
-      skip++==10) { //display every 200ms (at 5Hz)
-       skip = 0;
-        
+    DeadManPin == 0 && //deadman is pushed
+  skip++==10) { //display every 200ms (at 5Hz)
+    skip = 0;
+
     //    Serial.print(lastLoopUsefulTime); 
     //    Serial.print(",");
     //    Serial.print(lastLoopTime); 
@@ -706,5 +711,6 @@ void serialOut_timing(){ //print out to serial port when enabled.
     Serial.println("  ");//newline
   }
 }//end void serialOut_timing()
- 
+
+
 

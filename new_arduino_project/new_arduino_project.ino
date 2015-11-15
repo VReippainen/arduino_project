@@ -17,8 +17,8 @@
 //Motor variables
 #define LEFT_MOTOR_PIN 5
 #define RIGHT_MOTOR_PIN 6
-int left_motor_speed = 0;
-int right_motor_speed = 0;
+float left_motor_speed = 0;
+float right_motor_speed = 0;
 
 SoftwareSerial BT(BT_TX, BT_RX);
 char speed1 = 1; //0 means backwards, 2 is front, 1 means stop
@@ -48,6 +48,18 @@ VectorInt16 aaReal;
 VectorInt16 aaWorld;
 VectorFloat gravity;
 float ypr[3];
+
+// PID -controller
+float PID_integrator_sum = 0.0;
+
+// Some values: K_p = 0.0336, K_i = 0.2688
+float PID[] = {1, 1};  // K_p, K_i
+float feedback;
+
+//float gv[7];
+float initial_angle;
+float initial_angle_sum = 0;
+float set_point = 0;  // default set_point is 0 degrees, _|_
 
 volatile bool mpuInterrupt = false;
 
@@ -119,7 +131,15 @@ void setup() {
         Serial.print(devStatus);
         Serial.println(F(")"));
     }
-    loop_start_time = millis();
+    
+    unsigned int n = 7;
+    for (unsigned int j=0; j<n; j++) {
+    read_gyro();
+    initial_angle_sum = (float) initial_angle_sum  + ypr[0]; //sum of the n readings left/right steer gyro
+    //delay to do accel/gyro reads.
+    delay (10); //10ms
+  }
+  initial_angle = (float) initial_angle_sum / n;  //initial front/back tilt gyro
 }
 
 void read_bluetooth() {
@@ -171,7 +191,7 @@ void read_bluetooth() {
 
 void read_gyro() {
     if (!dmpReady) return;
-    while (!mpuInterrupt && fifoCount < packetSize) {
+    while (!mpuInterrupt && fifoCount < packetSize) {  //WARNING: Comparison between int and uint
     }
     // reset interrupt flag and get INT_STATUS byte
     mpuInterrupt = false;
@@ -188,7 +208,7 @@ void read_gyro() {
         // otherwise, check for DMP data ready interrupt (this should happen frequently)}
      else if (mpuIntStatus & 0x02) {
         // wait for correct available data length, should be a VERY short wait
-        while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
+        while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();  //WARNING: Comparison between int and uint
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
         // track FIFO count here in case there is > 1 packet available
@@ -215,7 +235,17 @@ void set_led() {
     led = !led;
 }
 
+void pid() {
+  float error = set_point - ypr[0];
+  PID_integrator_sum = PID_integrator_sum + error;  // Add the angle to PID_integrator_sum
+  feedback = PID[0] * error + PID[1] * PID_integrator_sum;
+}
+
 void doCalculations() {
+  pid();
+  
+  left_motor_speed = feedback;
+  right_motor_speed = feedback;
 }
 
 void setMotors() {
@@ -232,14 +262,12 @@ void setMotors() {
 void loop() {
     loop_start_time = millis();
     read_bluetooth();
-    read_gyro();    
-    //doCalculations();
+    read_gyro();
+    doCalculations();
     setMotors();
     set_led();
     loop_used_time = millis() - loop_start_time;
     if (loop_used_time < LOOPTIME) {
         delay(LOOPTIME - loop_used_time);
     }
-    
-
 }

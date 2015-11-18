@@ -10,13 +10,17 @@
 #define BT_TX 8
 #define BT_RX 9
 #define BT_Baudrate 9600
-#define BT_DEBUG
+//#define BT_DEBUG
 //#define MPU6050_DEBUG
-
+#define PID_DEBUG
+int debug_index = 0;
 
 //Motor variables
+#define LEFT_DIR_PIN 4
+#define RIGHT_DIR_PIN 7
 #define LEFT_MOTOR_PIN 5
 #define RIGHT_MOTOR_PIN 6
+
 float left_motor_speed = 0;
 float right_motor_speed = 0;
 
@@ -53,13 +57,13 @@ float ypr[3];
 float PID_integrator_sum = 0.0;
 
 // Some values: K_p = 0.0336, K_i = 0.2688
-float PID[] = {1, 1};  // K_p, K_i
+float PID[] = {5, 0};  // K_p, K_i
 float feedback;
 
 //float gv[7];
 float initial_angle;
 float initial_angle_sum = 0;
-float set_point = 0;  // default set_point is 0 degrees, _|_
+float set_point = 0.0;  // default set_point is 0 degrees, _|_
 
 volatile bool mpuInterrupt = false;
 
@@ -72,6 +76,10 @@ void setup() {
     analogWrite(LEFT_MOTOR_PIN, 0);
     led = 0;
     //digitalWrite(RESET_PIN, HIGH);
+    pinMode(RIGHT_DIR_PIN, OUTPUT);
+    pinMode(LEFT_DIR_PIN, OUTPUT);
+    digitalWrite(RIGHT_DIR_PIN, HIGH);
+    digitalWrite(LEFT_DIR_PIN, HIGH);
     digitalWrite(LED, LOW);
     delay(20);
     pinMode(RESET_PIN, OUTPUT);
@@ -99,9 +107,9 @@ void setup() {
     devStatus = mpu.dmpInitialize();
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
+    mpu.setXGyroOffset(-10);
+    mpu.setYGyroOffset(2);
+    mpu.setZGyroOffset(0.7);
     mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
 
     // make sure it worked (returns 0 if so)
@@ -140,6 +148,7 @@ void setup() {
     delay (10); //10ms
   }
   initial_angle = (float) initial_angle_sum / n;  //initial front/back tilt gyro
+  set_point = initial_angle;
 }
 
 void read_bluetooth() {
@@ -236,9 +245,29 @@ void set_led() {
 }
 
 void pid() {
-  float error = set_point - ypr[0];
+  float error = set_point - (ypr[1]* 180 / M_PI);
   PID_integrator_sum = PID_integrator_sum + error;  // Add the angle to PID_integrator_sum
+  if(PID_integrator_sum > 10000){
+    PID_integrator_sum = 10000;
+  }
   feedback = PID[0] * error + PID[1] * PID_integrator_sum;
+  #ifdef PID_DEBUG
+        if((debug_index % 10) == 0){
+        Serial.print("Setpoint\t");
+        Serial.print(set_point);
+        Serial.print("\t");
+        Serial.print("Output\t");
+        Serial.print(ypr[1] * 180 / M_PI);
+        Serial.print("\t");
+        Serial.print("Error\t");
+        Serial.print(error);
+        Serial.print("Feedback\t");
+        Serial.print("\t");
+        Serial.println(feedback);
+        debug_index = 0;
+      }
+        debug_index++;
+#endif
 }
 
 void doCalculations() {
@@ -249,14 +278,20 @@ void doCalculations() {
 }
 
 void setMotors() {
+//Serial.println(right_motor_speed < 0);
+    //Sets direction to motors 
+    if(right_motor_speed < 0) {digitalWrite(RIGHT_DIR_PIN, LOW);
+    //Serial.println("Taakke");
+    }
+    else{ digitalWrite(RIGHT_DIR_PIN, HIGH);
+    //Serial.println("Ettee");
+    }
+    if(left_motor_speed < 0) digitalWrite(LEFT_DIR_PIN, LOW);
+    else digitalWrite(LEFT_DIR_PIN, HIGH);
     
-    //Maps variables left_motor_speed and right_motor speed to correct
-    //range and writes them through PWM pins to motor controllers. Positive values
-    //means the positive direction and opposite.
-    int write_to_left = map(left_motor_speed,-127,128,0,255);
-    int write_to_right = map(right_motor_speed, -127, 128, 0, 255);
-    analogWrite(LEFT_MOTOR_PIN, write_to_left);
-    analogWrite(RIGHT_MOTOR_PIN, write_to_right);
+    //writes PWM value to motors
+    analogWrite(LEFT_MOTOR_PIN, (int)abs(left_motor_speed));
+    analogWrite(RIGHT_MOTOR_PIN, (int)abs(right_motor_speed));
 }
 
 void loop() {

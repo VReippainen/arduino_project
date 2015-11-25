@@ -12,7 +12,7 @@
 #define BT_Baudrate 9600
 //#define BT_DEBUG
 //#define MPU6050_DEBUG
-#define PID_DEBUG
+//#define PID_DEBUG
 int debug_index = 0;
 
 //Motor variables
@@ -31,6 +31,7 @@ const char UP = 'w';
 const char DOWN = 's';
 const char LEFT = 'a';
 const char RIGHT = 'd';
+const char STOP = 'x';
 char led;
 // Loop variables
 const int LOOPTIME = 15; //In milliseconds
@@ -153,40 +154,52 @@ void setup() {
 
 void read_bluetooth() {
     char val = '0';
+    dir1 = 1;
+    char old_speed = speed1;
+    unsigned int N = 10;
+    for(unsigned int i = 0; i < N; i++){
     if (BT.available()) {
         val = BT.read();
     }
     if(isalpha(val) && val != 'b'){
       
-      Serial.println("Is alpha!");
+      //Serial.println("Is alpha!");
       if (val == UP) {
+          if(old_speed == 0){
+            speed1 = 1;
+          }
          // Serial.println("UP");
-          speed1 = 2;
-          dir1 = 1;
+          else speed1 = 2;
       }
       
       else if (val == LEFT) {
           //Serial.println("LEFT");
-          speed1 = 1;
           dir1 = 0;
       }
       else if (val == RIGHT) {
           //Serial.println("RIGHT");
-          speed1 = 1;
           dir1 = 2;
       }
       else if (val == DOWN) {
+        if(old_speed == 2){
+            speed1 = 1;
+          }
           //Serial.println("DOWN");
-          speed1 = 0;
-          dir1 = 1;
+          else speed1 = 0;
+      }
+      else if (val == STOP) {
+        
+            speed1 = 1;
+          
+          //Serial.println("DOWN");
+          
       }
           
           
 
-      else {
-          speed1 = 1;
-          dir1 = 1;
-      }
+    
+    }
+    }
       #ifdef BT_DEBUG
           Serial.print("Val: ");
           Serial.print(val);
@@ -195,7 +208,7 @@ void read_bluetooth() {
           Serial.print("\tDir: ");
           Serial.println(dir1, DEC);
       #endif
-    } 
+    
 }
 
 void read_gyro() {

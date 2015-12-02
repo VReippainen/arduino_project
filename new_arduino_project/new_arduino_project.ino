@@ -2,24 +2,23 @@
 
 
 //Define Bluetooth variables
-#define RESET_PIN 12
 #define LED 13
 #define BT_TX 8
 #define BT_RX 9
 #define BT_Baudrate 9600
-#define GYRO_PIN 3
-//#define BT_DEBUG
-//#define GYRO_DEBUG
-//#define PID_DEBUG
-//#define PROCESSING_PLOT
-int sensorValue = 0;
-int debug_index = 0;
-int x = 0;
+#define GYRO_PIN 0
 //Motor variables
 #define LEFT_DIR_PIN 4
 #define RIGHT_DIR_PIN 7
 #define LEFT_MOTOR_PIN 5
 #define RIGHT_MOTOR_PIN 6
+//#define BT_DEBUG
+//#define GYRO_DEBUG
+//#define PID_DEBUG
+//#define PROCESSING_PLOT
+int sensorValue = 0;
+int x = 0;
+
 
 float left_motor_speed = 0;
 float right_motor_speed = 0;
@@ -32,9 +31,9 @@ const char DOWN = 's';
 const char LEFT = 'a';
 const char RIGHT = 'd';
 const char STOP = 'x';
-char led;
+char led = 0;
 // Loop variables
-const int LOOPTIME = 20; //In milliseconds
+const int LOOPTIME = 10; //In milliseconds
 long loop_start_time;
 long loop_used_time;
 
@@ -42,7 +41,7 @@ long loop_used_time;
 float PID_integrator_sum = 0.0;
 
 // Some values: K_p = 0.0336, K_i = 0.2688
-float PID[] = {5, 0};  // K_p, K_i
+float PID[] = {2, 0};  // K_p, K_i
 float feedback;
 
 //float gv[7];
@@ -56,29 +55,21 @@ int maxVal = 402;
 
 
 void setup() {
-    analogReference(EXTERNAL);
+    //analogReference(EXTERNAL);
     analogWrite(RIGHT_MOTOR_PIN, 0);
     analogWrite(LEFT_MOTOR_PIN, 0);
     led = 0;
-    //digitalWrite(RESET_PIN, HIGH);
     pinMode(RIGHT_DIR_PIN, OUTPUT);
     pinMode(LEFT_DIR_PIN, OUTPUT);
     digitalWrite(RIGHT_DIR_PIN, HIGH);
     digitalWrite(LEFT_DIR_PIN, HIGH);
     digitalWrite(LED, LOW);
     delay(20);
-    pinMode(RESET_PIN, OUTPUT);
     pinMode(LED, OUTPUT);
     BT.begin(BT_Baudrate);
 
     
     Serial.begin(57600);
-    while (!Serial); // wait for Leonardo enumeration, others continue immediately
-
-    
-
-    
-
   set_point = 0;
 }
 
@@ -125,9 +116,6 @@ void read_bluetooth() {
           
       }
           
-          
-
-    
     }
     }
       #ifdef BT_DEBUG
@@ -143,15 +131,14 @@ void read_bluetooth() {
 
 void read_gyro() {
   int xRead = analogRead(GYRO_PIN);
-  int xAng = map(xRead, minVal, maxVal, -90, 90);
+  x = map(xRead, minVal, maxVal, -90, 90);
   #ifdef GYRO_DEBUG
     Serial.print("x: ");
     Serial.println(x);
   #endif
   #ifdef PROCESSING_PLOT
-    sensorValue = smooth(xRead,filterVal,sensorValue);
     
-    Serial.println(sensorValue);
+    //Serial.println(sensorValue);
   #endif
 }
 
@@ -195,7 +182,7 @@ void doCalculations() {
 }
 
 void setMotors() {
-//Serial.println(right_motor_speed < 0);
+
     //Sets direction to motors 
     if(right_motor_speed < 0) {digitalWrite(RIGHT_DIR_PIN, LOW);
     //Serial.println("Taakke");
@@ -219,7 +206,7 @@ void loop() {
     setMotors();
     set_led();
     loop_used_time = micros() - loop_start_time;
-    Serial.println(loop_used_time);
+    Serial.println(x);
     if (loop_used_time < LOOPTIME) {
         delay(LOOPTIME - loop_used_time);
     }

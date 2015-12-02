@@ -19,7 +19,7 @@ void draw(){
     val = trim(val);
   
   float inByte = float(val);
-  inByte = map(inByte, 840,870,0,height);
+  inByte = map(inByte, 745,976,0,height);
   stroke(127,34,255);
   line(xPos, height, xPos, height - inByte);
   if(xPos >= width){
